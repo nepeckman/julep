@@ -1,6 +1,7 @@
 from tokenizer import Token, TokenType
 from parser import Node, NodeType
 from strutils import indent
+from math import round
 
 proc printTokens*(tokens: seq[Token]) =
     for token in tokens:
@@ -19,3 +20,9 @@ proc printAst(ast: Node, level: int) =
 
 proc printAst*(ast: Node) =
     printAst(ast, 0)
+
+proc printNumber*(x: float) =
+    if (round(x) == x):
+        echo int(x)
+    else:
+        echo x
