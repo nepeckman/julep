@@ -15,7 +15,7 @@ type
 let sexprChars: set[char] = {'(', ')'}
 let whitespaceRe= re.re(r"\s") 
 let numberChars: set[char] = {'0'..'9'}
-let symbolChars: set[char] = {'a'..'z', 'A'..'Z', '0'..'9', '+', '-'}
+let symbolChars: set[char] = {'a'..'z', 'A'..'Z', '0'..'9', '+', '-', '*', '/'}
 
 proc tokenize*(program: string): seq[Token] =
     var tokens: seq[Token] = @[]

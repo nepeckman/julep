@@ -1,5 +1,6 @@
 import tokenizer
 import parser
+import eval
 import logger
 
 proc main() =
@@ -7,6 +8,7 @@ proc main() =
         program = ""
         tokens: seq[Token]
         ast: Node
+        value: Value
     while (program != "exit"):
         stdout.write("nimlisp->")
         program = readLine(stdin)
@@ -20,7 +22,12 @@ proc main() =
         except InvalidSyntaxError:
             echo getCurrentExceptionMsg()
             continue
-        printAst(parse(tokens))
+        try:
+            value = eval(ast)
+        except EvaluationError:
+            echo getCurrentExceptionMsg()
+            continue
+        echo value.number
 
 when isMainModule:
     main()
