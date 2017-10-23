@@ -1,5 +1,6 @@
 from tokenizer import Token, TokenType
 from parser import Node, NodeType
+from eval import Value, ValueType, ErrorType
 from strutils import indent
 from math import round
 
@@ -26,3 +27,13 @@ proc printNumber*(x: float) =
         echo int(x)
     else:
         echo x
+
+proc printValue*(x: Value) =
+    if (x.valueType == errorValue): 
+        if(x.error == divideByZero):
+            echo "Divide by Zero error"
+        elif (x.error == unknownOp):
+            echo "Unknown operator"
+        elif (x.error == badNumber):
+            echo "Bad Number"
+    if (x.valueType == numberValue): printNumber(x.number)

@@ -27,7 +27,7 @@ proc main() =
         except EvaluationError:
             echo getCurrentExceptionMsg()
             continue
-        printNumber(value.number)
+        printValue(value)
 
 when isMainModule:
     main()
