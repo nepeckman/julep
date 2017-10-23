@@ -1,4 +1,4 @@
-from tokenizer import Token, TokenType
+from tokenizer import Token, TokenKind
 from parser import Node, NodeType
 from eval import Value, ValueType, ErrorType
 from strutils import indent

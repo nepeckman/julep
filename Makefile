@@ -1,2 +1,2 @@
 all :
-	nim c -r -o:build/nimlisp repl.nim
+	nim c -r -o:build/julep repl.nim

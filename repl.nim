@@ -10,7 +10,7 @@ proc main() =
         ast: Node
         value: Value
     while (program != "exit"):
-        stdout.write("nimlisp->")
+        stdout.write("julep->")
         program = readLine(stdin)
         try:
             tokens = tokenize(program)

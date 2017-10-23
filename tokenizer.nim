@@ -2,13 +2,13 @@ from re import nil
 from parseutils import nil
 
 type
-    TokenType* = enum
-        parenToken
-        numberToken
-        stringToken
-        symbolToken
+    TokenKind* = enum
+        tkParen
+        tkNumber
+        tkString
+        tkSymbol
     Token* = ref object of RootObj
-        tokenType*: TokenType
+        kind*: TokenKind
         value*: string
     UnknownTokenError* = object of Exception
 
@@ -24,7 +24,7 @@ proc tokenize*(program: string): seq[Token] =
         let current = program[idx]
         if (current in sexprChars):
             inc(idx)
-            tokens.add(Token(tokenType: parenToken, value: $current))
+            tokens.add(Token(kind: tkParen, value: $current))
             continue
         if (re.match($current, whitespaceRe)):
             inc(idx, parseutils.skipWhitespace(program, idx))
@@ -32,17 +32,17 @@ proc tokenize*(program: string): seq[Token] =
         var value: string
         if (current in numberChars):
             inc(idx, parseutils.parseWhile(program, value, numberChars, idx))
-            tokens.add(Token(tokenType: numberToken, value: value))
+            tokens.add(Token(kind: tkNumber, value: value))
             continue
         if (current == '"'):
             inc(idx)
             inc(idx, parseutils.parseUntil(program, value, '"', idx))
             inc(idx)
-            tokens.add(Token(tokenType: stringToken, value: value))
+            tokens.add(Token(kind: tkString, value: value))
             continue
         if (current in symbolChars):
             inc(idx, parseutils.parseWhile(program, value, symbolChars, idx))
-            tokens.add(Token(tokenType: symbolToken, value: value))
+            tokens.add(Token(kind: tkSymbol, value: value))
             continue
         raise newException(UnknownTokenError, "Unknown Token: " & current)
     result = tokens

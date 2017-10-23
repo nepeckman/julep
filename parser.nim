@@ -16,11 +16,11 @@ type InvalidSyntaxError* = object of Exception
 proc walk(tokens: seq[Token], idx: var int): Node =
     let current = tokens[idx]
     inc(idx)
-    if (current.tokenType in {numberToken, stringToken}):
+    if (current.kind in {tkNumber, tkString}):
         return Node(nodeType: literal, children: nil, contents: current.value)
-    if (current.tokenType == symbolToken):
+    if (current.kind == tkSymbol):
         return Node(nodeType: symbol, children: nil, contents: current.value)
-    if (current.tokenType == parenToken and current.value == "("):
+    if (current.kind == tkParen and current.value == "("):
         let sexprNode = Node(nodeType: sexpr, children: @[], contents: nil)
         if (not (idx < len(tokens))):
             raise newException(InvalidSyntaxError, "Invalid Syntax: Unclosed Paren")
