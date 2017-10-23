@@ -3,7 +3,7 @@ from parseutils import parseFloat
 
 type ValueType* = enum
     numberValue,
-    symbolValue,
+    builtinValue,
     sexprValue,
     errorValue
 
@@ -15,32 +15,57 @@ type ErrorType* = enum
 type Value* = ref object of RootObj
     valueType*: ValueType
     number*: float
-    symbol*: string
+    builtinFunction*: proc (args: seq[Value]): Value
     sexpr*: seq[Value]
     error*: ErrorType
 
 type EvaluationError* = object of Exception
 
-proc evalOperator(x: Value, op: string, y: Value): Value =
-    if (x.valueType == errorValue): return x
-    if (y.valueType == errorValue): return y
-    if (op == "+"): return Value(number: x.number + y.number)
-    if (op == "-"): return Value(number: x.number - y.number)
-    if (op == "*"): return Value(number: x.number * y.number)
-    if (op == "/"):
-        if (y.number == 0): return Value(valueType: errorValue, error: divideByZero)
-        else: return Value(number: x.number / y.number)
-    return Value(valueType: errorValue, error: unknownOp)
+proc lAdd(args: seq[Value]): Value =
+    result = Value(valueType: numberValue, number: args[0].number)
+    for arg in args[1..^1]:
+        result.number = result.number + arg.number
+
+proc lSub(args: seq[Value]): Value =
+    result = Value(valueType: numberValue, number: args[0].number)
+    for arg in args[1..^1]:
+        result.number = result.number - arg.number
+
+proc lMult(args: seq[Value]): Value =
+    result = Value(valueType: numberValue, number: args[0].number)
+    for arg in args[1..^1]:
+        result.number = result.number * arg.number
+
+proc lDiv(args: seq[Value]): Value =
+    result = Value(valueType: numberValue, number: args[0].number)
+    for arg in args[1..^1]:
+        if (arg.number == 0):
+            result = Value(valueType: errorValue, error: divideByZero)
+            break
+        result.number = result.number / arg.number
+
+proc findBuiltinFn(name: string): proc (args: seq[Value]): Value =
+    if (name == "+"): return lAdd
+    if (name == "-"): return lSub
+    if (name == "*"): return lMult
+    if (name == "/"): return lDiv
 
 proc eval*(ast: Node): Value =
     result = Value()
     if (ast.nodeType == literal):
+        result.valueType = numberValue
         discard parseFloat(ast.contents, result.number)
+    elif (ast.nodeType == symbol):
+        result.valueType = builtinValue
+        result.builtinFunction = findBuiltinFn(ast.contents)
     elif (ast.nodeType == sexpr):
-        var op = ast.children[0].contents
-        result = eval(ast.children[1])
-        for child in ast.children[2..^1]:
-            result = evalOperator(result, op, eval(child))
+        var fn = eval(ast.children[0])
+        var args: seq[Value] = @[] 
+        for child in ast.children[1..^1]:
+            var arg = eval(child)
+            if (arg.valueType == errorValue): return arg
+            args.add(arg)
+        result = fn.builtinFunction(args)
     elif (ast.nodeType == program):
         for child in ast.children:
             result = eval(child)

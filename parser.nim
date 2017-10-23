@@ -25,9 +25,9 @@ proc walk(tokens: seq[Token], idx: var int): Node =
         if (not (idx < len(tokens))):
             raise newException(InvalidSyntaxError, "Invalid Syntax: Unclosed Paren")
         while (tokens[idx].value != ")"):
+            sexprNode.children.add(walk(tokens, idx))
             if (not (idx < len(tokens))):
                  raise newException(InvalidSyntaxError, "Invalid Syntax: Unclosed Paren")
-            sexprNode.children.add(walk(tokens, idx))
         inc(idx)
         return sexprNode
     raise newException(InvalidSyntaxError, "Unexpected token: " & current.value)
