@@ -1,4 +1,5 @@
 import tokenizer
+import data
 import parser
 import eval
 import logger
@@ -7,8 +8,8 @@ proc main() =
     var 
         program = ""
         tokens: seq[Token]
-        ast: Node
-        value: Value
+        ast: JulepValue
+        value: JulepValue
     while (program != "exit"):
         stdout.write("julep->")
         program = readLine(stdin)

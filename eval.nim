@@ -1,74 +1,61 @@
-from parser import Node, NodeType
+import data
 from parseutils import parseFloat
-
-type ValueType* = enum
-    numberValue,
-    builtinValue,
-    sexprValue,
-    errorValue
-
-type ErrorType* = enum
-    divideByZero,
-    unknownOp,
-    badNumber
-
-type Value* = ref object of RootObj
-    valueType*: ValueType
-    number*: float
-    builtinFunction*: proc (args: seq[Value]): Value
-    sexpr*: seq[Value]
-    error*: ErrorType
 
 type EvaluationError* = object of Exception
 
-proc lAdd(args: seq[Value]): Value =
-    result = Value(valueType: numberValue, number: args[0].number)
+proc eval*(ast: JulepValue): JulepValue
+
+proc jAdd(args: seq[JulepValue]): JulepValue =
+    result = julepNumber(args[0].number)
     for arg in args[1..^1]:
         result.number = result.number + arg.number
 
-proc lSub(args: seq[Value]): Value =
-    result = Value(valueType: numberValue, number: args[0].number)
+proc jSub(args: seq[JulepValue]): JulepValue =
+    result = julepNumber(args[0].number)
     for arg in args[1..^1]:
         result.number = result.number - arg.number
 
-proc lMult(args: seq[Value]): Value =
-    result = Value(valueType: numberValue, number: args[0].number)
+proc jMult(args: seq[JulepValue]): JulepValue =
+    result = julepNumber(args[0].number)
     for arg in args[1..^1]:
         result.number = result.number * arg.number
 
-proc lDiv(args: seq[Value]): Value =
-    result = Value(valueType: numberValue, number: args[0].number)
+proc jDiv(args: seq[JulepValue]): JulepValue =
+    result = julepNumber(args[0].number)
     for arg in args[1..^1]:
         if (arg.number == 0):
-            result = Value(valueType: errorValue, error: divideByZero)
+            result = julepError(jekDivideByZero)
             break
         result.number = result.number / arg.number
 
-proc findBuiltinFn(name: string): proc (args: seq[Value]): Value =
-    if (name == "+"): return lAdd
-    if (name == "-"): return lSub
-    if (name == "*"): return lMult
-    if (name == "/"): return lDiv
+proc jDo(args: seq[JulepValue]): JulepValue =
+    for arg in args:
+        result = eval(arg)
 
-proc eval*(ast: Node): Value =
-    result = Value()
-    if (ast.nodeType == literal):
-        result.valueType = numberValue
-        discard parseFloat(ast.contents, result.number)
-    elif (ast.nodeType == symbol):
-        result.valueType = builtinValue
-        result.builtinFunction = findBuiltinFn(ast.contents)
-    elif (ast.nodeType == sexpr):
-        var fn = eval(ast.children[0])
-        var args: seq[Value] = @[] 
+proc findBuiltinFn(name: string): JulepBuiltin =  
+    if (name == "+"): return jAdd
+    if (name == "-"): return jSub
+    if (name == "*"): return jMult
+    if (name == "/"): return jDiv
+    if (name == "do"): return jDo
+
+proc eval*(ast: JulepValue): JulepValue =
+    if (ast.kind == jvkLiteral):
+        var number: float
+        discard parseFloat(ast.contents, number)
+        result = julepNumber(number)
+    elif (ast.kind == jvkSymbol):
+        result = julepBuiltin(findBuiltinFn(ast.contents))
+    elif (ast.kind == jvkList):
+        var jFunc = eval(ast.children[0])
+        var args: seq[JulepValue] = @[] 
         for child in ast.children[1..^1]:
             var arg = eval(child)
-            if (arg.valueType == errorValue): return arg
+            if (arg.kind == jvkError): return arg
             args.add(arg)
-        result = fn.builtinFunction(args)
-    elif (ast.nodeType == program):
-        for child in ast.children:
-            result = eval(child)
+        result = jFunc.fn(args)
+    elif (ast.kind in {jvkFunction, jvkNumber, jvkString, jvkBuiltin}):
+        result = ast
     else:
-        raise newException(EvaluationError, "Unevaluatable node: " & $ast.nodeType)
+        raise newException(EvaluationError, "Unevaluatable node: " & $ast.kind)
     return
