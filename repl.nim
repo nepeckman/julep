@@ -3,6 +3,7 @@ import data
 import parser
 import eval
 import logger
+import rdstdin
 
 proc main() =
     var 
@@ -11,8 +12,7 @@ proc main() =
         ast: JulepValue
         value: JulepValue
     while (program != "exit"):
-        stdout.write("julep->")
-        program = readLine(stdin)
+        program = readLineFromStdin("julep-> ")
         try:
             tokens = tokenize(program)
         except UnknownTokenError:
