@@ -12,8 +12,13 @@ proc printAst(ast: JulepValue, level: int) =
         echo indent(ast.contents, level * 2)
     elif (ast.kind == jvkList):
         echo indent(">", level * 2)
-        for child in ast.children:
-            printAst(child, level + 1)
+        var rest = ast
+        while (rest.kind != jvkNil):
+            echo indent(repr(rest.value), (level + 1) * 2)
+            rest = rest.next
+
+proc printAst*(ast: JulepValue) =
+    printAst(ast, 0)
 
 proc printNumber*(x: float) =
     if (round(x) == x):

@@ -32,6 +32,7 @@ proc jDo(args: seq[JulepValue]): JulepValue =
     for arg in args:
         result = eval(arg)
 
+
 proc findBuiltinFn(name: string): JulepBuiltin =  
     if (name == "+"): return jAdd
     if (name == "-"): return jSub
@@ -47,12 +48,14 @@ proc eval*(ast: JulepValue): JulepValue =
     elif (ast.kind == jvkSymbol):
         result = julepBuiltin(findBuiltinFn(ast.contents))
     elif (ast.kind == jvkList):
-        var jFunc = eval(ast.children[0])
-        var args: seq[JulepValue] = @[] 
-        for child in ast.children[1..^1]:
-            var arg = eval(child)
+        var jFunc = eval(first(ast))
+        var rest = rest(ast)
+        var args: seq[JulepValue] = @[]
+        while (rest.kind != jvkNil):
+            var arg = eval(first(rest))
             if (arg.kind == jvkError): return arg
             args.add(arg)
+            rest = rest(rest)
         result = jFunc.fn(args)
     elif (ast.kind in {jvkFunction, jvkNumber, jvkString, jvkBuiltin}):
         result = ast

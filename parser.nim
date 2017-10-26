@@ -11,22 +11,30 @@ proc walk(tokens: seq[Token], idx: var int): JulepValue =
     if (current.kind == tkSymbol):
         return julepSymbol(current.value)
     if (current.kind == tkParen and current.value == "("):
-        let sexpr = julepList()
+        let head = julepList()
+        var tail = head
+        var next: JulepValue
         if (not (idx < len(tokens))):
             raise newException(InvalidSyntaxError, "Invalid Syntax: Unclosed Paren")
         while (tokens[idx].value != ")"):
-            sexpr.children.add(walk(tokens, idx))
+            next = julepList(walk(tokens, idx))
+            tail.next = next
+            tail = next
             if (not (idx < len(tokens))):
                  raise newException(InvalidSyntaxError, "Invalid Syntax: Unclosed Paren")
         inc(idx)
-        return sexpr
+        return rest(head)
     raise newException(InvalidSyntaxError, "Unexpected token: " & current.value)
 
 proc parse*(tokens: seq[Token]): JulepValue =
-    let ast = julepList(@[julepSymbol("do")])
-    var idx = 0;
+    let ast = julepList(julepSymbol("do"))
+    var tail = ast
+    var next: JulepValue
+    var idx = 0
     while (idx < len(tokens)):
-        ast.children.add(walk(tokens, idx))
+        next = julepList(walk(tokens, idx))
+        tail.next = next
+        tail = next
     return ast
 
 proc main() =

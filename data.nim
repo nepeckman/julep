@@ -20,7 +20,9 @@ type
     JulepValue* = ref JulepValueObj
     JulepValueObj* = object
         case kind*: JulepValueKind
-        of jvkList: children*: seq[JulepValue]
+        of jvkList:
+            value*: JulepValue
+            next*: JulepValue
         of jvkLiteral, jvkSymbol: contents*: string
         of jvkNumber: number*: float
         of jvkString: string*: string
@@ -31,8 +33,11 @@ type
         of jvkError: error*: JulepErrorKind
         of jvkNil: nil
 
-proc julepList*(list: seq[JulepValue] = @[]): JulepValue =
-    result = JulepValue(kind: jvkList, children: list)
+proc julepNil*(): JulepValue =
+    result = JulepValue(kind: jvkNil)
+
+proc julepList*(value: JulepValue = julepNil(), next: JulepValue = julepNil()): JulepValue =
+    result = JulepValue(kind: jvkList, value: value, next: next)
 
 proc julepLiteral*(contents: string): JulepValue =
     result = JulepValue(kind: jvkLiteral, contents: contents)
@@ -51,3 +56,12 @@ proc julepBuiltin*(fn: JulepBuiltin): JulepValue =
 
 proc julepError*(error: JulepErrorKind): JulepValue =
     result = JulepValue(kind: jvkError, error: error)
+
+proc first*(list: JulepValue): JulepValue =
+    result = list.value
+
+proc conj*(list: JulepValue, value: JulepValue): JulepValue =
+    result = julepList(value, list)
+
+proc rest*(list: JulepValue): JulepValue =
+    result = list.next
